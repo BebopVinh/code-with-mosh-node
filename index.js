@@ -19,31 +19,51 @@ app.get("/api/courses/", (req, res) => {
 })
 
 app.get("/api/courses/:id", (req, res) => {
-	let course = courses.find((c) => c.id === parseInt(req.params.id))
+	const course = findCourse(req.params.id)
 	course ? res.send(course) : res.status(404).send("Course was not found!")
 })
 
 app.post("/api/courses", (req, res) => {
-	const { name } = req.body
-	const schema = Joi.object({
-		name: Joi.string().min(3).required(),
-	})
-
-	const { error, value } = schema.validate(req.body)
+	const { error, value } = validateCourse(req.body)
 
 	if (error) {
-		console.log(error)
 		res.status(400).send(error.message)
 	} else if (value) {
 		console.log(value)
 		const course = {
 			id: courses.length + 1,
-			name,
+			name: req.body.name,
 		}
 		courses.push(course)
 		res.send(courses)
 	}
 })
+
+app.put("/api/courses/:id", (req, res) => {
+	const course = findCourse(req.params.id)
+	if (!course) res.status(404).send("Course was not found!")
+
+	const { error, value } = validateCourse(req.body)
+
+	if (error) {
+		res.status(400).send(error.message)
+	} else if (value) {
+		course.name = req.body.name
+		res.send(course)
+	}
+})
+
+const validateCourse = (course) => {
+	const schema = Joi.object({
+		name: Joi.string().min(3).required(),
+	})
+
+	return schema.validate(course)
+}
+
+const findCourse = (courseId) => {
+	return courses.find((c) => c.id === parseInt(courseId))
+}
 
 const port = process.env.PORT || 8000
 app.listen(port, () => console.log(`Running on port ${port}!`))
