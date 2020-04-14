@@ -1,4 +1,4 @@
-const Joi = require("joi")
+const Joi = require("@hapi/joi")
 const express = require("express")
 const app = express()
 
@@ -25,17 +25,24 @@ app.get("/api/courses/:id", (req, res) => {
 
 app.post("/api/courses", (req, res) => {
 	const { name } = req.body
-	if (!name || name.length < 3) {
-		res.status(400).send(
-			"Name is required or should be minimum of 4+ characters"
-		)
+	const schema = Joi.object({
+		name: Joi.string().min(3).required(),
+	})
+
+	const { error, value } = schema.validate(req.body)
+
+	if (error) {
+		console.log(error)
+		res.status(400).send(error.message)
+	} else if (value) {
+		console.log(value)
+		const course = {
+			id: courses.length + 1,
+			name,
+		}
+		courses.push(course)
+		res.send(courses)
 	}
-	const course = {
-		id: courses.length + 1,
-		name,
-	}
-	courses.push(course)
-	res.send(courses)
 })
 
 const port = process.env.PORT || 8000
